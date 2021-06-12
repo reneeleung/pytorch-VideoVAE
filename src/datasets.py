@@ -7,39 +7,34 @@ import torch
 import torch.nn
 from torch.utils.data import Dataset
 
-class WeizmannActionSequenceDataset(Dataset):
-    def __init__(self, root='data', train=True, bbox_pickle_path=None, transform=None):
+class SmartsActionSequenceDataset(Dataset):
+    def __init__(self, root='data', train=True, transform=None):
         self.root = root
-        self.bbox_pickle_path = bbox_pickle_path
         self.transform = transform
         self.train = train
         self.tr_seq_length = 10
         self.tr_num_clips = 20
 
         self.data = []
-        self.act_to_ix = {'bend': 0, 'jack': 1, 'jump': 2, 'pjump': 3,
-                          'run2': 4, 'run1': 4, 'run': 4, 'side': 5,
-                          'skip2':6, 'skip1': 6, 'skip': 6,
-                          'walk2': 7, 'walk1': 7, 'walk': 7,
-                          'wave1': 8, 'wave2': 9}
+        self.act_to_ix = {'loop': 0} #for now, only one scenario
                           
-        self.id_to_ix = {'daria': 0, 'denis': 1, 'eli': 2,
-                         'ido': 3, 'ira': 4, 'lena': 5,
-                         'lyova': 6, 'moshe': 7, 'shahar': 8}
+        images_dir = os.path.join(root, 'classification', 'smarts_frames_aligned_by_video')
+        ids = os.listdir(images_dir)
+        
+        self.id_to_ix = {identity:ix for ix, identity in enumerate(ids)}
+        print(ids)
 
         self.ix_to_act = {ix:act for act, ix in self.act_to_ix.items()}
         self.ix_to_id = {ix:identity for identity, ix in self.id_to_ix.items()}
 
-        images_dir = os.path.join(root, 'weizmann_frames_aligned_by_video')
-        ids = os.listdir(images_dir)
 
         # loop through people
         for identity in ids:
-            actions = sorted(os.listdir(os.path.join(root, 'weizmann_frames_aligned_by_video', identity)))
+            actions = sorted(os.listdir(os.path.join(images_dir, identity)))
 
             # loop though action
             for act in actions:
-                frames = sorted(os.listdir(os.path.join(root, 'weizmann_frames_aligned_by_video', identity, act)))
+                frames = sorted(os.listdir(os.path.join(images_dir, identity, act)))
 
                 num_train = len(frames) * 2 // 3
 
@@ -53,7 +48,7 @@ class WeizmannActionSequenceDataset(Dataset):
                     # Can sample just 20 mini-clips of length-10 from each video here
                     # by uncommenting the following line.
                     #sample_ix = np.random.choice(range(start, end-10), 20)
-                    sample_ix = range(start, end-10)
+                    sample_ix = range(start, end-self.tr_seq_length)
 
                     for ix, seq_start in enumerate(sample_ix):
                         seq_i = []
@@ -62,7 +57,7 @@ class WeizmannActionSequenceDataset(Dataset):
 
                             # get frame path
                             # NOTE: fname should be juse number
-                            f_path = os.path.join(root, 'weizmann_frames_aligned_by_video', identity, act, fname)
+                            f_path = os.path.join(images_dir, identity, act, fname)
 
                             seq_i.append({
                                 'img_path': f_path,
@@ -83,7 +78,7 @@ class WeizmannActionSequenceDataset(Dataset):
                     # NOTE: No need to form a sequence here, I think.
                     for ix in range(start, end):
                         fname = frames[ix]
-                        f_path = os.path.join(root, 'weizmann_frames_aligned_by_video', identity, act, fname)
+                        f_path = os.path.join(images_dir, identity, act, fname)
 
                         self.data.append({
                             'img_path': f_path,
@@ -144,45 +139,31 @@ class WeizmannActionSequenceDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def show_bbox(self, img, bbox):
-        img_cp = np.copy(img)
-        ymin, xmin, ymax, xmax = bbox
-        cv2.rectangle(img_cp, (xmin, ymin), (xmax, ymax),
-                      color=(0, 0, 255), thickness=1)
 
-        plt.imshow(img_cp)
-        plt.pause(0.001)
-
-class WeizmannActionClassificationDataset(Dataset):
-    def __init__(self, root, train=True, bbox_pickle_path=None, transform=None):
+class SmartsActionClassificationDataset(Dataset):
+    def __init__(self, root, train=True, transform=None):
         self.root = root
-        self.bbox_pickle_path = bbox_pickle_path
         self.transform = transform
         self.train = train
         self.tr_seq_length = 10
         self.tr_num_clips = 20
 
         self.data = []
-        self.act_to_ix = {'bend': 0, 'jack': 1, 'jump': 2, 'pjump': 3,
-                          'run': 4, 'run1': 4, 'run2': 4,
-                          'side': 5, 'skip':6, 'skip1': 6, 'skip2': 6,
-                          'walk': 7, 'walk1': 7, 'walk2': 7,
-                          'wave1': 8, 'wave2': 9}
-
-        self.id_to_ix = {'daria': 0, 'denis': 1, 'eli': 2,
-                         'ido': 3, 'ira': 4, 'lena': 5,
-                         'lyova': 6, 'moshe': 7, 'shahar': 8}
-
-        images_dir = os.path.join(root, 'weizmann_frames_aligned_by_video')
+        self.act_to_ix = {'loop': 0} #for now, only one scenario
+                          
+        images_dir = os.path.join(root, 'classification', 'smarts_frames_aligned_by_video')
         ids = os.listdir(images_dir)
+        
+        self.id_to_ix = {identity:ix for ix, identity in enumerate(ids)}
+
 
         # loop through people
         for identity in ids:
-            actions = sorted(os.listdir(os.path.join(root, 'weizmann_frames_aligned_by_video', identity)))
+            actions = sorted(os.listdir(os.path.join(images_dir, identity)))
 
             # loop though action
             for act in actions:
-                frames = sorted(os.listdir(os.path.join(root, 'weizmann_frames_aligned_by_video', identity, act)))
+                frames = sorted(os.listdir(os.path.join(images_dir, identity, act)))
 
                 num_train = len(frames) * 2 // 3
 
@@ -197,7 +178,7 @@ class WeizmannActionClassificationDataset(Dataset):
                 for ix in range(start, end):
                     fname = frames[ix]
 
-                    f_path = os.path.join(root, 'weizmann_frames_aligned_by_video', identity, act, fname)
+                    f_path = os.path.join(images_dir, identity, act, fname)
 
                     self.data.append({
                             'img_path': f_path,

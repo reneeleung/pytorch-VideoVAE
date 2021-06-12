@@ -34,12 +34,12 @@ class Encoder(nn.Module):
         self.z_dim = z_dim
         self.in_c = in_c
 
-        self.conv1 = DownBlock(in_c, 10, kernel_size=9, stride=1)
-        self.conv2 = DownBlock(10, 20, kernel_size=7, stride=3)
-        self.conv3 = DownBlock(20, 40, kernel_size=5, stride=1)
-        self.conv4 = DownBlock(40, 80, kernel_size=3, stride=3) # (b, 80, 4, 4)
+        self.conv1 = DownBlock(in_c, 20, kernel_size=11, stride=2)
+        self.conv2 = DownBlock(20, 40, kernel_size=9, stride=2)
+        self.conv3 = DownBlock(40, 80, kernel_size=7, stride=3)
+        self.conv4 = DownBlock(80, 160, kernel_size=5, stride=4) # (b, 160, 4, 4)
         self.dropout = nn.Dropout2d(0.5)
-        self.fc5 = nn.Linear(1280, 1024)
+        self.fc5 = nn.Linear(2560, 1024)
         self.relu = nn.ReLU(inplace=True)
         self.fc6 = nn.Linear(1024, self.z_dim)
 
@@ -66,13 +66,13 @@ class Decoder(nn.Module):
 
         self.fc1 = nn.Linear(z_dim, 1024)
         self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Linear(1024, 1280)
+        self.fc2 = nn.Linear(1024, 2560)
 
-        self.convt3 = UpBlock(80, 40, kernel_size=3, stride=3, output_padding=1)
-        self.convt4 = UpBlock(40, 20, kernel_size=5, stride=1, output_padding=0)
-        self.convt5 = UpBlock(20, 10, kernel_size=7, stride=3, output_padding=1)
-        #self.convt6 = UpBlock(10, out_c, kernel_size=9, stride=1, output_padding=0)
-        self.convt6 = nn.ConvTranspose2d(10, out_c, kernel_size=9, stride=1, bias=False)
+        self.convt3 = UpBlock(160, 80, kernel_size=5, stride=4, output_padding=1)
+        self.convt4 = UpBlock(80, 40, kernel_size=7, stride=3, output_padding=0)
+        self.convt5 = UpBlock(40, 20, kernel_size=9, stride=2, output_padding=0)
+        #self.convt6 = UpBlock(20, out_c, kernel_size=11, stride=2, output_padding=0)
+        self.convt6 = nn.ConvTranspose2d(20, out_c, kernel_size=11, stride=2, output_padding=1, bias=False)
         self.tanh = nn.Tanh() # NOTE: Different from the VideoVAE paper
 
     def forward(self, z):
@@ -80,7 +80,7 @@ class Decoder(nn.Module):
         out = self.relu(out)
         out = self.fc2(out)
 
-        out = out.view(-1, 80, 4, 4) # the shape from encoder before its first FC layers
+        out = out.view(-1, 160, 4, 4) # the shape from encoder before its first FC layers
         out = self.convt3(out)
         out = self.convt4(out)
         out = self.convt5(out)

@@ -10,25 +10,13 @@ import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.utils.data import DataLoader
-sys.path.append('/home/charles/pytorch-VideoVAE')
-from src.datasets import WeizmannActionSequenceDataset
 
 # We handcrafted some transitions for testing.
 seq_len = 15
-bend_seq = [0] * 15
-jack_jump_seq = [1] * 8 + [2] * 7
-jump_skip_seq = [2] * 8 + [6] * 7
-pjump_side_seq = [3] * 8 + [5] * 7
-run_skip_seq = [4] * 8 + [6] * 7
-side_walk_side_seq = [5] * 5 + [7] * 5 + [5] * 5
-skip_walk_skip_seq = [6] * 5 + [7] * 5 + [6] * 5
-walk_r_walk_seq = [7] * 5 + [4] * 5 + [7] * 5
-wave1_jump_seq = [8] * 8 + [2] * 7
-wave2_jack_seq = [9] * 8 + [1] * 7
+loop_seq = [0] * 15 # no transients really, only 1 action now
 
-transient_dict = {0: bend_seq, 1: jack_jump_seq, 2: jump_skip_seq, 3: pjump_side_seq,
-                  4: run_skip_seq, 5: side_walk_side_seq, 6: skip_walk_skip_seq, 
-                  7: walk_r_walk_seq, 8: wave1_jump_seq, 9: wave2_jack_seq}
+# only 1 action now
+transient_dict = {0: loop_seq}
 
 def syn_first_frame(model, img_0, h_0, c_0, holistic_attr, args, only_prior=False):
     """Synthesize the first frame for the 2 settings. """
@@ -66,8 +54,8 @@ def synthesize_test(epoch_ix, model, loader, args, only_prior=True, write_out=Fa
     
     with torch.no_grad():
         
-        # have 10 act, 9 id
-        n_act, n_id = 10, 9
+        # have 1 act, 230 id
+        n_act, n_id = 1, 230
         attr_seen = np.zeros((n_act, n_id))
 
         for batch_ix, data in enumerate(loader):

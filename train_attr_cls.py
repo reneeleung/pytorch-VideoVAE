@@ -12,7 +12,7 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-from src.datasets import WeizmannActionClassificationDataset
+from src.datasets import SmartsActionClassificationDataset
 from src.model import VideoVAE, Classifier
 
 parser = argparse.ArgumentParser()
@@ -120,16 +120,16 @@ if __name__ == "__main__":
     in_c = 3
     z_dim = 512
     h_dim = 512
-    n_act = 10
-    n_id = 9
+    n_act = 1
+    n_id = 230
 
     # data
     trfs = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ])
-    train_set = WeizmannActionClassificationDataset(root='data', train=True, transform=trfs)
-    test_set = WeizmannActionClassificationDataset(root='data', train=False, transform=trfs)
+    train_set = SmartsActionClassificationDataset(root='data', train=True, transform=trfs)
+    test_set = SmartsActionClassificationDataset(root='data', train=False, transform=trfs)
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, drop_last=True)
     test_loader = DataLoader(test_set, batch_size=1, shuffle=False)

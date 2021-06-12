@@ -13,7 +13,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import torchvision.utils as vutils
 
-from src.datasets import WeizmannActionSequenceDataset
+from src.datasets import SmartsActionSequenceDataset
 from src.synthesize import synthesize_test
 from src.loss import VideoVAELoss
 from src.model import VideoVAE
@@ -122,11 +122,11 @@ if __name__ == '__main__':
     test_batch_size = 1
     lr = args.lr
     seq_len = 10
-    im_shape = (3, 64, 64)
+    im_shape = (3, 256, 256)
     z_dim = 512
     h_dim = 512 # for LSTM hidden
-    n_act = 10
-    n_id = 9
+    n_act = 1
+    n_id = 230
     start_epoch = 0
 
     # data
@@ -135,10 +135,10 @@ if __name__ == '__main__':
         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ])
 
-    train_set = WeizmannActionSequenceDataset(root='data', transform=trfs)
+    train_set = SmartsActionSequenceDataset(root='data', transform=trfs)
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, drop_last=True)
 
-    test_set = WeizmannActionSequenceDataset(root='data', train=False, transform=trfs)
+    test_set = SmartsActionSequenceDataset(root='data', train=False, transform=trfs)
     test_loader = DataLoader(test_set, batch_size=1, shuffle=True)
 
     # for class:ix's change

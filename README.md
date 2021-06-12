@@ -9,12 +9,12 @@ Requirement
 
 Prepare Data
 ---
-1. Download data from http://www.wisdom.weizmann.ac.il/~vision/SpaceTimeActions.html, under the section of **Classification Database**.
+1. Run SMARTS simulation to collect observations.
 2. Make a dir, for classification data: 
 ```
-mkdir -p data/classification
+mkdir -p data/smarts_frames
 ```
-3. Unzip all .zip files (Walk, Run, ..., Skip) and put all of them under `data/classification`
+3. Put each scenario (action) under `data/smarts_frames`
 4. run the following lines to get the preprocessed data:
 ```
 chmod +x ./get_data.sh
