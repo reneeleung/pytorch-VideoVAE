@@ -18,6 +18,8 @@ from src.synthesize import synthesize_test
 from src.loss import VideoVAELoss
 from src.model import VideoVAE
 
+from colorsys import hls_to_rgb
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--lr', type=float, default=1e-4)
@@ -31,6 +33,8 @@ parser.add_argument('--ckpt', type=str, default=None,
                     help="path to model and opt's state_dict")
 parser.add_argument('--exp', type=str, default='exp{}'.format(time.strftime('%m%d')),
                     help='experiment directory for checkpoint, logs, tensorboard, ..., etc')
+parser.add_argument('--save_latent', action='store_true',
+                    help='save latent space sequential changes')
 
 args = parser.parse_args()
 
@@ -83,11 +87,25 @@ def make_dirs(d):
     if not os.path.exists(d):
         os.makedirs(d)
 
+def rainbow_color_stops(n=10, end=2/3):
+    return [ hls_to_rgb(end * i/(n-1), 0.5, 1) for i in range(n) ]
+
+def plot_latent(latents, name):
+    fig = plt.figure(figsize=(12,8))
+    ax = plt.axes(projection="3d")      
+    for latent_seq in latents:
+        colours = rainbow_color_stops(n=len(latent_seq)) # rainbow gradient in sequence
+        ax.scatter(latent_seq[:,0], latent_seq[:,1], latent_seq[:,2], c=colours, zorder=2);
+        ax.plot(latent_seq[:,0], latent_seq[:,1], latent_seq[:,2], color='k',zorder=1);
+    ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_zlabel('z');
+    plt.savefig(os.path.join(args.exp, 'plots', name))
+
 if __name__ == '__main__':
     # exp dir
     args.exp = os.path.join('ExperimentVideoVAE', args.exp)
     make_dirs(args.exp)
     make_dirs(os.path.join(args.exp, 'checkpoint'))
+    make_dirs(os.path.join(args.exp, 'plots'))
     
     # logger
     logger = get_logger(logpath=os.path.join(args.exp, 'logs'), filepath=__file__)
@@ -117,7 +135,7 @@ if __name__ == '__main__':
     torch.cuda.manual_seed(args.seed)
 
     # params
-    epochs = 10000
+    epochs = 100#00
     batch_size = args.batch_size
     test_batch_size = 1
     lr = args.lr
@@ -135,10 +153,10 @@ if __name__ == '__main__':
         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ])
 
-    train_set = SmartsActionSequenceDataset(root='data', transform=trfs)
+    train_set = SmartsActionSequenceDataset(root='/content/data/SMARTS-VideoVAE', transform=trfs)
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, drop_last=True)
 
-    test_set = SmartsActionSequenceDataset(root='data', train=False, transform=trfs)
+    test_set = SmartsActionSequenceDataset(root='/content/data/SMARTS-VideoVAE', train=False, transform=trfs)
     test_loader = DataLoader(test_set, batch_size=1, shuffle=True)
 
     # for class:ix's change
@@ -239,11 +257,13 @@ if __name__ == '__main__':
                         writer.add_histogram(name_, param.clone().cpu().data, niter)
                 
         # testing here (synthesize)
+        model.latents = [[], []]
+        save_latent = args.save_latent and epoch_ix % 3 == 0
         model.eval()
         only_prior = True
-        synthesize_test(epoch_ix, model, test_loader, args, only_prior=only_prior)
+        synthesize_test(epoch_ix, model, test_loader, args, only_prior=only_prior, save_latent=save_latent)
         only_prior = False
-        synthesize_test(epoch_ix, model, test_loader, args, only_prior=only_prior)
+        synthesize_test(epoch_ix, model, test_loader, args, only_prior=only_prior, save_latent=save_latent)
 
         if epoch_ix % 3 == 0:
             states = {
@@ -251,4 +271,10 @@ if __name__ == '__main__':
                 'model': model.state_dict(),
                 'optimizer': opt.state_dict(),
             }
-            torch.save(states, os.path.join(args.exp, 'checkpoint', 'video_vae_{}.pth'.format(epoch_ix)))
+            #torch.save(states, os.path.join(args.exp, 'checkpoint', 'video_vae_{}.pth'.format(epoch_ix)))
+            if save_latent:
+                # Plot latent space in 3d
+                plot_latent(model.latents[0], 'epoch_{}_OnlyPrior.png'.format(epoch_ix))
+                plot_latent(model.latents[1], 'epoch_{}_FixFirst.png'.format(epoch_ix))
+
+

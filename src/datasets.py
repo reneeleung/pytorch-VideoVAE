@@ -18,7 +18,7 @@ class SmartsActionSequenceDataset(Dataset):
         self.data = []
         self.act_to_ix = {'loop': 0} #for now, only one scenario
                           
-        images_dir = os.path.join(root, 'classification', 'smarts_frames_aligned_by_video')
+        images_dir = os.path.join(root, 'VideoVAE_classification', 'smarts_frames_aligned_by_video')
         ids = os.listdir(images_dir)
         
         self.id_to_ix = {identity:ix for ix, identity in enumerate(ids)}
@@ -151,7 +151,7 @@ class SmartsActionClassificationDataset(Dataset):
         self.data = []
         self.act_to_ix = {'loop': 0} #for now, only one scenario
                           
-        images_dir = os.path.join(root, 'classification', 'smarts_frames_aligned_by_video')
+        images_dir = os.path.join(root, 'VideoVAE_classification', 'smarts_frames_aligned_by_video')
         ids = os.listdir(images_dir)
         
         self.id_to_ix = {identity:ix for ix, identity in enumerate(ids)}

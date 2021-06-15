@@ -49,7 +49,7 @@ def syn_sequence(model, seq_len, init_seq, img_prev, h_prev, c_prev, holistic_at
     gen_seq = torch.cat(init_seq, dim=0)
     return gen_seq
 
-def synthesize_test(epoch_ix, model, loader, args, only_prior=True, write_out=False):
+def synthesize_test(epoch_ix, model, loader, args, only_prior=True, write_out=False, save_latent=False):
     model.eval()
     
     with torch.no_grad():
@@ -116,6 +116,19 @@ def synthesize_test(epoch_ix, model, loader, args, only_prior=True, write_out=Fa
             init_seq, img_1, h_1, c_1 = syn_first_frame(model, img_0, h_0, c_0, holistic_attr_fixed, args, only_prior=only_prior)
             gen_seq_fixed = syn_sequence(model, seq_len, init_seq, img_1, h_1, c_1, 
                                          holistic_attr_fixed, act_seq_fixed, args, only_prior=only_prior)
+            # plot latent sequence
+            if save_latent:
+                latent_seq = np.empty((0,3))
+                for t in range(len(gen_seq_fixed)):
+                    with torch.no_grad():
+                        x = gen_seq_fixed[t:t+1, :, :, :]
+                        x_enc = model.enc(x)
+                        plot_enc = model.enc.fc7(x_enc).cpu().numpy()
+                        latent_seq = np.append(latent_seq, plot_enc, axis=0)
+                if only_prior:
+                    model.latents[0].append(latent_seq)
+                else:
+                    model.latents[1].append(latent_seq)
 
             # gen transient sequence
             init_seq, img_1, h_1, c_1 = syn_first_frame(model, img_0, h_0, c_0, holistic_attr_transient, args, only_prior=only_prior)

@@ -128,8 +128,8 @@ if __name__ == "__main__":
             transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ])
-    train_set = SmartsActionClassificationDataset(root='data', train=True, transform=trfs)
-    test_set = SmartsActionClassificationDataset(root='data', train=False, transform=trfs)
+    train_set = SmartsActionClassificationDataset(root='/content/data/SMARTS-VideoVAE', train=True, transform=trfs)
+    test_set = SmartsActionClassificationDataset(root='/content/data/SMARTS-VideoVAE', train=False, transform=trfs)
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, drop_last=True)
     test_loader = DataLoader(test_set, batch_size=1, shuffle=False)

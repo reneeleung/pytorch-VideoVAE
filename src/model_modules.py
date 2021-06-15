@@ -42,6 +42,7 @@ class Encoder(nn.Module):
         self.fc5 = nn.Linear(2560, 1024)
         self.relu = nn.ReLU(inplace=True)
         self.fc6 = nn.Linear(1024, self.z_dim)
+        self.fc7 = nn.Linear(self.z_dim, 3) # for plotting use, not actually a latent
 
     def forward(self, x):
         """forward pass for encoder.

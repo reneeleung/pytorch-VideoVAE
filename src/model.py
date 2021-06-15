@@ -30,8 +30,10 @@ class VideoVAE(nn.Module):
         self.n_act = n_act
         self.n_id = n_id
 
+        self.latents = [] # for plotting sequential latent space
+
         # Encoder and attr_net can be trained indepently
-        self.enc = model_modules.Encoder()
+        self.enc = model_modules.Encoder(z_dim=z_dim)
         self.attr_net = model_modules.AttributeNet(z_dim=z_dim, h_dim=128, n_act=n_act, n_id=n_id)
 
         # Conditional Approximate Posterior
@@ -53,7 +55,7 @@ class VideoVAE(nn.Module):
                                      out_dim=512)
 
         # Decoder
-        self.dec = model_modules.Decoder()
+        self.dec = model_modules.Decoder(z_dim=z_dim)
 
         # LSTM
         self.input_size = input_size # dimension: (z_dim+z_dim*2),  z_t and [mu_q, logvar_q]
