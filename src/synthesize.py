@@ -29,7 +29,7 @@ def syn_first_frame(model, img_0, h_0, c_0, holistic_attr, args, only_prior=Fals
     else:
         recon_img_0, h_1, c_1 = model.synthesize(img_0, h_0, c_0, holistic_attr, only_prior=only_prior,
                                                 is_first_frame=True)
-        init_seq = [img_0, recon_img_0]
+        init_seq = [recon_img_0]
         img_1 = recon_img_0
 
     return init_seq, img_1, h_1, c_1
